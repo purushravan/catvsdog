@@ -16,7 +16,7 @@ def create_model(input_shape, optimizer, loss, metrics):
 
     inputs = keras.Input(shape=input_shape)
     x = data_augmentation(inputs)
-    x = keras.layers.Rescaling(1. / config.model_config.scaling_factor)(x)
+    x = keras.layers.Rescaling(1. / config.model_cfg.scaling_factor)(x)
     x = keras.layers.Conv2D(filters=32, kernel_size=3, activation="relu")(x)
     x = keras.layers.MaxPooling2D(pool_size=2)(x)
     x = keras.layers.Conv2D(filters=64, kernel_size=3, activation="relu")(x)
@@ -38,7 +38,7 @@ def create_model(input_shape, optimizer, loss, metrics):
 
 
 # Create model
-classifier = create_model(input_shape = config.model_config.input_shape, 
-                          optimizer = config.model_config.optimizer, 
-                          loss = config.model_config.loss, 
-                          metrics = [config.model_config.accuracy_metric])
+classifier = create_model(input_shape = config.model_cfg.input_shape, 
+                          optimizer = config.model_cfg.optimizer, 
+                          loss = config.model_cfg.loss, 
+                          metrics = [config.model_cfg.accuracy_metric])

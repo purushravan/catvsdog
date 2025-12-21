@@ -22,18 +22,18 @@ def run_training() -> None:
     
     #### MLFlow RELATED CODE BELOW
     
-    # import mlflow
-    # mlflow.set_tracking_uri("http://127.0.0.1:5000/")
-    # mlflow.set_experiment("Cat-vs-Dog Classification")
-    # mlflow.tensorflow.autolog()
+    import mlflow
+    mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+    mlflow.set_experiment("Cat-vs-Dog Classification")
+    mlflow.tensorflow.autolog()
 
 
     # Model fitting
     classifier.fit(train_data,
-                   epochs = config.model_config.epochs,
+                   epochs = config.model_cfg.epochs,
                    validation_data = val_data,
                    callbacks = callbacks_and_save_model(),
-                   verbose = config.model_config.verbose)
+                   verbose = config.model_cfg.verbose)
 
     # Calculate the score/error
     test_loss, test_acc = classifier.evaluate(test_data)

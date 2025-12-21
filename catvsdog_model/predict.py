@@ -12,7 +12,7 @@ from catvsdog_model import __version__ as _version
 from catvsdog_model.config.core import config
 from catvsdog_model.processing.data_manager import load_model, load_test_dataset
 
-model_file_name = f"{config.app_config.model_save_file}{_version}"
+model_file_name = f"{config.app_cfg.model_save_file}{_version}"
 clf_model = load_model(file_name = model_file_name)
 
 
@@ -24,7 +24,7 @@ def make_prediction(*, input_data: Union[pd.DataFrame, dict, tf.Tensor]) -> dict
     predictions = clf_model.predict(input_data, verbose = 0)
     pred_labels = []
     for i in predictions:
-        pred_labels.append(config.model_config.label_mappings[int(predictions + 0.5)])
+        pred_labels.append(config.model_cfg.label_mappings[int(predictions + 0.5)])
         
     results = {"predictions": pred_labels, "version": _version}
     print(results)
