@@ -46,9 +46,22 @@ black
 # Python utilities
 python-dotenv==1.2.1
 pyyaml==6.0.3
+strictyaml==1.6.2
 click==8.3.1
 tqdm==4.67.1
 requests==2.32.5
 
 # Protobuf - fixed version for compatibility
 protobuf==4.25.3
+
+# Additional dependencies for DVC and config
+configobj==5.0.9
+flatten-dict==0.4.2
+hydra-core==1.3.2
+omegaconf==2.3.0
+cloudpickle>=3.0.0
+gitpython>=3.1.0
+packaging>=23.0
+
+# Joblib for model persistence
+joblib>=1.3.0
