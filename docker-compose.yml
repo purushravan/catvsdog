@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Cats vs Dogs Classification API
+  catvsdog-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: catvsdog-classifier:latest
+    container_name: catvsdog-api
+    ports:
+      - "8001:8001"
+    volumes:
+      # Mount trained models directory (so you can update models without rebuilding)
+      - ./catvsdog_model/trained_models:/app/catvsdog_model/trained_models:ro
+      # Mount static files for uploaded images
+      - ./catvsdog_model_api/app/static:/app/catvsdog_model_api/app/static
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MODEL_PATH=/app/catvsdog_model/trained_models
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - catvsdog-network
+
+  # Optional: MLflow tracking server (if you want to run it in Docker)
+  mlflow-server:
+    image: python:3.12-slim
+    container_name: mlflow-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlartifacts:/mlflow/mlartifacts
+      - ./mlruns:/mlflow/mlruns
+      - ./mlflow.db:/mlflow/mlflow.db
+    command: >
+      bash -c "pip install mlflow==3.7.0 &&
+               mlflow server
+               --backend-store-uri sqlite:////mlflow/mlflow.db
+               --default-artifact-root /mlflow/mlartifacts
+               --host 0.0.0.0
+               --port 5000"
+    restart: unless-stopped
+    networks:
+      - catvsdog-network
+
+networks:
+  catvsdog-network:
+    driver: bridge
+
+volumes:
+  mlartifacts:
+  mlruns:

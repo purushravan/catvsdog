@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: catvsdog-ingress
+  namespace: catvsdog
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Add other annotations as needed for your ingress controller
+    # cert-manager.io/cluster-issuer: letsencrypt-prod  # For SSL certificates
+spec:
+  ingressClassName: nginx  # Adjust based on your ingress controller
+  rules:
+  - host: catvsdog.example.com  # Change to your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: catvsdog-api-service
+            port:
+              number: 8001
+  # tls:  # Uncomment for HTTPS
+  # - hosts:
+  #   - catvsdog.example.com
+  #   secretName: catvsdog-tls-secret

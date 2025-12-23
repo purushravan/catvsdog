@@ -22,12 +22,14 @@ def make_prediction(*, input_data: Union[pd.DataFrame, dict, tf.Tensor]) -> dict
     results = {"predictions": None, "version": _version}
     
     predictions = clf_model.predict(input_data, verbose = 0)
+
     pred_labels = []
-    for i in predictions:
-        pred_labels.append(config.model_cfg.label_mappings[int(predictions + 0.5)])
+    for prediction in predictions:
+        label = config.model_cfg.label_mappings[int(prediction + 0.5)]
+        score = 0.5 + prediction if prediction <= 0.5 else prediction
+        pred_labels.append((label, score))
         
     results = {"predictions": pred_labels, "version": _version}
-    print(results)
 
     return results
 

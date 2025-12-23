@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catvsdog-api
+  namespace: catvsdog
+  labels:
+    app: catvsdog-api
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catvsdog-api
+  template:
+    metadata:
+      labels:
+        app: catvsdog-api
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: catvsdog-api
+        image: catvsdog-classifier:simple
+        imagePullPolicy: IfNotPresent  # Change to Always if using a registry
+        ports:
+        - containerPort: 8001
+          name: http
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: catvsdog-config
+        env:
+        - name: PYTHONDONTWRITEBYTECODE
+          value: "1"
+        - name: PIP_NO_CACHE_DIR
+          value: "1"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        # Model files are already in the Docker image, no need to mount PVC
+        # - name: models-storage
+        #   mountPath: /app/catvsdog_model/trained_models
+        #   readOnly: true
+        - name: static-storage
+          mountPath: /app/catvsdog_model_api/app/static
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      # Model files are in the image, only need static storage
+      # - name: models-storage
+      #   persistentVolumeClaim:
+      #     claimName: catvsdog-models-pvc
+      - name: static-storage
+        persistentVolumeClaim:
+          claimName: catvsdog-static-pvc
+      restartPolicy: Always

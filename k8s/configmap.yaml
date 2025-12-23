@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catvsdog-config
+  namespace: catvsdog
+data:
+  PYTHONUNBUFFERED: "1"
+  MODEL_PATH: "/app/catvsdog_model/trained_models"

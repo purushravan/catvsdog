@@ -1,0 +1,287 @@
+# Complete Monitoring Setup - File Structure
+
+## 📁 Files Created/Modified for Observability
+
+### Application Code (Modified)
+catvsdog_model_api/app/main.py
+  ├─ Added Prometheus client imports
+  ├─ Defined 6 custom ML metrics
+  ├─ Instrumented predict endpoint
+  └─ Exposed /metrics endpoint
+
+requirements/api_requirements.txt
+  ├─ Added prometheus-client==0.21.0
+  └─ Added prometheus-fastapi-instrumentator==7.0.0
+
+### Kubernetes Manifests (k8s/)
+
+#### Monitoring Infrastructure (New)
+k8s/monitoring-namespace.yaml
+  └─ Creates 'monitoring' namespace
+
+k8s/prometheus-rbac.yaml
+  ├─ ServiceAccount: prometheus
+  ├─ ClusterRole: prometheus (read access to K8s API)
+  └─ ClusterRoleBinding
+
+k8s/prometheus-config.yaml
+  ├─ ConfigMap: prometheus-config
+  │   ├─ prometheus.yml (scrape configs)
+  │   └─ alerts.yml (6 alert rules)
+  └─ Scrape jobs:
+      ├─ prometheus (self-monitoring)
+      ├─ kubernetes-apiservers
+      ├─ kubernetes-nodes
+      ├─ kubernetes-pods (annotation-based)
+      └─ catvsdog-api (targeted)
+
+k8s/prometheus-deployment.yaml
+  ├─ Deployment: prometheus
+  │   ├─ Image: prom/prometheus:v2.55.1
+  │   ├─ Storage: 15 days retention
+  │   ├─ Resources: 250m CPU, 512Mi RAM
+  │   └─ Probes: liveness & readiness
+  └─ Service: prometheus (NodePort 30090)
+
+k8s/grafana-config.yaml
+  ├─ ConfigMap: grafana-datasources
+  │   └─ Prometheus datasource configuration
+  └─ ConfigMap: grafana-dashboards-config
+      └─ Dashboard provisioning config
+
+k8s/grafana-dashboard.yaml
+  └─ ConfigMap: grafana-dashboard-catvsdog
+      └─ Complete dashboard JSON with 13 panels:
+          ├─ 1. Prediction Rate
+          ├─ 2. Total Predictions
+          ├─ 3. Prediction Latency (p50, p95, p99)
+          ├─ 4. Confidence Distribution
+          ├─ 5. Active Predictions
+          ├─ 6. Image Processing Errors
+          ├─ 7. API Request Rate
+          ├─ 8. HTTP Status Codes
+          ├─ 9. Pod CPU Usage
+          ├─ 10. Pod Memory Usage
+          ├─ 11. Model Information
+          ├─ 12. Pod Restart Count
+          └─ 13. API Uptime
+
+k8s/grafana-deployment.yaml
+  ├─ Deployment: grafana
+  │   ├─ Image: grafana/grafana:11.4.0
+  │   ├─ Default credentials: admin/admin
+  │   ├─ Resources: 100m CPU, 256Mi RAM
+  │   └─ Probes: liveness & readiness
+  └─ Service: grafana (NodePort 30300)
+
+k8s/kustomization-monitoring.yaml
+  └─ Kustomize configuration for all monitoring resources
+
+#### Application Updates (Modified)
+k8s/deployment.yaml
+  └─ Added pod annotations:
+      ├─ prometheus.io/scrape: "true"
+      ├─ prometheus.io/port: "8001"
+      └─ prometheus.io/path: "/metrics"
+
+k8s/service.yaml
+  └─ Changed to NodePort (30001) for easy access
+
+### Automation Scripts
+
+deploy-monitoring.sh (Executable)
+  └─ One-command deployment script:
+      ├─ Creates monitoring namespace
+      ├─ Deploys Prometheus (RBAC + Config + Deployment)
+      ├─ Deploys Grafana (Config + Dashboard + Deployment)
+      ├─ Updates application deployment
+      ├─ Verifies deployment
+      ├─ Shows access information
+      └─ Provides next steps
+
+### Documentation
+
+OBSERVABILITY_README.md
+  ├─ Complete overview (main documentation)
+  ├─ Architecture diagrams
+  ├─ Component descriptions
+  ├─ Quick start guide
+  ├─ Metrics catalog
+  ├─ Dashboard reference
+  ├─ Alert rules
+  ├─ Access information
+  ├─ Example queries
+  ├─ Testing procedures
+  ├─ Troubleshooting guide
+  ├─ Security considerations
+  ├─ Scaling considerations
+  └─ Production recommendations
+
+MONITORING_GUIDE.md
+  ├─ Comprehensive 60+ page guide
+  ├─ Detailed architecture
+  ├─ Step-by-step deployment
+  ├─ All metrics explained in detail
+  ├─ Grafana dashboard walkthrough
+  ├─ PromQL query examples
+  ├─ Alert configuration
+  ├─ Advanced configuration
+  ├─ Integration with CI/CD
+  ├─ Production best practices
+  ├─ Backup and disaster recovery
+  └─ Extensive troubleshooting
+
+MONITORING_QUICKSTART.md
+  ├─ 5-minute quick start
+  ├─ Fast deployment steps
+  ├─ Quick access URLs
+  ├─ Key metrics at a glance
+  ├─ Quick verification checks
+  ├─ Common PromQL queries
+  ├─ Quick troubleshooting
+  └─ Pro tips
+
+MONITORING_METRICS.md
+  ├─ Complete metrics reference
+  ├─ Each metric documented with:
+  │   ├─ Type (Counter/Histogram/Gauge/Info)
+  │   ├─ Labels
+  │   ├─ Description
+  │   ├─ Example queries
+  │   └─ Use cases
+  ├─ Dashboard examples
+  ├─ Alert examples
+  ├─ Common queries
+  ├─ Debugging scenarios
+  ├─ Visualization tips
+  ├─ Cardinality analysis
+  └─ Best practices
+
+MONITORING_SETUP_COMPLETE.md
+  ├─ Setup summary
+  ├─ All files created/modified
+  ├─ Metrics captured
+  ├─ Dashboard panels
+  ├─ Alert rules
+  ├─ Quick start commands
+  ├─ Access URLs
+  ├─ Key features
+  ├─ Testing guide
+  ├─ Next steps
+  ├─ Verification checklist
+  └─ Success criteria
+
+MONITORING_FILES.txt (This file)
+  └─ Visual file structure reference
+
+## 📊 Summary Statistics
+
+Files Created: 12
+Files Modified: 3
+Total Documentation Pages: 100+
+Kubernetes Resources: 14
+Custom Metrics: 6
+Dashboard Panels: 13
+Alert Rules: 6
+Supported Queries: 50+
+
+## 🎯 Access Points
+
+Production URLs:
+├─ Prometheus UI: http://localhost:30090
+├─ Grafana UI: http://localhost:30300
+├─ Cat vs Dog API: http://localhost:30001
+└─ Metrics Endpoint: http://localhost:30001/metrics
+
+Port-Forward Alternatives:
+├─ kubectl port-forward -n monitoring svc/prometheus 9090:9090
+├─ kubectl port-forward -n monitoring svc/grafana 3000:3000
+└─ kubectl port-forward -n catvsdog svc/catvsdog-api-service 8001:8001
+
+## 🚀 Deployment Commands
+
+Full Deployment:
+  ./deploy-monitoring.sh
+
+Manual Deployment:
+  kubectl apply -f k8s/monitoring-namespace.yaml
+  kubectl apply -f k8s/prometheus-rbac.yaml
+  kubectl apply -f k8s/prometheus-config.yaml
+  kubectl apply -f k8s/prometheus-deployment.yaml
+  kubectl apply -f k8s/grafana-config.yaml
+  kubectl apply -f k8s/grafana-dashboard.yaml
+  kubectl apply -f k8s/grafana-deployment.yaml
+
+Kustomize Deployment:
+  kubectl apply -k k8s/kustomization-monitoring.yaml
+
+## ✅ What's Monitored
+
+Application Layer:
+├─ Prediction counts (by class)
+├─ Prediction latency (histogram)
+├─ Prediction confidence (histogram)
+├─ Image processing errors
+├─ Active predictions (gauge)
+└─ Model version info
+
+HTTP Layer:
+├─ Request rate
+├─ Response times
+├─ Status codes
+└─ In-flight requests
+
+Infrastructure Layer:
+├─ CPU usage
+├─ Memory usage
+├─ Pod restarts
+└─ Service availability
+
+## 📈 Visualization Stack
+
+Metrics Collection: Prometheus 2.55.1
+├─ Scrape interval: 15s
+├─ Retention: 15 days
+└─ Storage: In-cluster (emptyDir)
+
+Visualization: Grafana 11.4.0
+├─ Default credentials: admin/admin
+├─ Auto-refresh: 10s
+└─ Pre-configured datasource
+
+Dashboard Features:
+├─ 13 panels
+├─ Real-time updates
+├─ Color-coded alerts
+└─ Responsive design
+
+## 🔔 Alerting
+
+Alert Rules: 6 configured
+├─ APIDown (critical, 2m)
+├─ HighPredictionErrorRate (warning, 5m)
+├─ HighPredictionLatency (warning, 5m)
+├─ LowConfidencePredictions (info, 10m)
+├─ HighMemoryUsage (warning, 5m)
+└─ HighCPUUsage (warning, 5m)
+
+## 🎓 Documentation Hierarchy
+
+Quick Start (5 min):
+  └─ MONITORING_QUICKSTART.md
+
+Complete Setup:
+  └─ MONITORING_SETUP_COMPLETE.md
+
+Detailed Guide (60+ pages):
+  └─ MONITORING_GUIDE.md
+
+Metrics Reference:
+  └─ MONITORING_METRICS.md
+
+Architecture Overview:
+  └─ OBSERVABILITY_README.md
+
+File Structure:
+  └─ MONITORING_FILES.txt (this file)
+

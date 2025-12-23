@@ -1,0 +1,270 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-catvsdog
+  namespace: monitoring
+data:
+  catvsdog-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "uid": "catvsdog-ml-monitoring",
+        "title": "Cat vs Dog ML Model Monitoring",
+        "tags": ["ml", "catvsdog", "model-monitoring"],
+        "timezone": "browser",
+        "schemaVersion": 16,
+        "version": 1,
+        "refresh": "10s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Prediction Rate",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "rate(catvsdog_predictions_total[5m])",
+                "legendFormat": "{{prediction_class}}",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "ops", "label": "Predictions/sec"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Total Predictions by Class",
+            "type": "stat",
+            "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "sum by (prediction_class) (catvsdog_predictions_total)",
+                "legendFormat": "{{prediction_class}}",
+                "refId": "A"
+              }
+            ],
+            "options": {
+              "reduceOptions": {
+                "values": false,
+                "calcs": ["lastNotNull"]
+              }
+            }
+          },
+          {
+            "id": 3,
+            "title": "Prediction Latency (p50, p95, p99)",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.50, rate(catvsdog_prediction_latency_seconds_bucket[5m]))",
+                "legendFormat": "p50",
+                "refId": "A"
+              },
+              {
+                "expr": "histogram_quantile(0.95, rate(catvsdog_prediction_latency_seconds_bucket[5m]))",
+                "legendFormat": "p95",
+                "refId": "B"
+              },
+              {
+                "expr": "histogram_quantile(0.99, rate(catvsdog_prediction_latency_seconds_bucket[5m]))",
+                "legendFormat": "p99",
+                "refId": "C"
+              }
+            ],
+            "yaxes": [
+              {"format": "s", "label": "Latency"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Prediction Confidence Distribution",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.50, rate(catvsdog_prediction_confidence_bucket[5m]))",
+                "legendFormat": "p50 confidence",
+                "refId": "A"
+              },
+              {
+                "expr": "histogram_quantile(0.95, rate(catvsdog_prediction_confidence_bucket[5m]))",
+                "legendFormat": "p95 confidence",
+                "refId": "B"
+              }
+            ],
+            "yaxes": [
+              {"format": "percentunit", "label": "Confidence", "min": 0, "max": 1},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Active Predictions",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 16, "w": 6, "h": 6},
+            "targets": [
+              {
+                "expr": "catvsdog_active_predictions",
+                "legendFormat": "Active predictions",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "short", "label": "Count"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Image Processing Errors",
+            "type": "graph",
+            "gridPos": {"x": 6, "y": 16, "w": 6, "h": 6},
+            "targets": [
+              {
+                "expr": "rate(catvsdog_image_processing_errors_total[5m])",
+                "legendFormat": "Error rate",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "ops", "label": "Errors/sec"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 7,
+            "title": "API Request Rate",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 16, "w": 6, "h": 6},
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{job='catvsdog-api'}[5m])",
+                "legendFormat": "{{method}} {{handler}}",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "reqps", "label": "Requests/sec"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 8,
+            "title": "HTTP Response Status Codes",
+            "type": "piechart",
+            "gridPos": {"x": 18, "y": 16, "w": 6, "h": 6},
+            "targets": [
+              {
+                "expr": "sum by (status) (rate(http_requests_total{job='catvsdog-api'}[5m]))",
+                "legendFormat": "{{status}}",
+                "refId": "A"
+              }
+            ]
+          },
+          {
+            "id": 9,
+            "title": "Pod CPU Usage",
+            "type": "graph",
+            "gridPos": {"x": 0, "y": 22, "w": 12, "h": 7},
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{namespace='catvsdog',pod=~'catvsdog-api.*'}[5m])",
+                "legendFormat": "{{pod}}",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "percentunit", "label": "CPU Usage"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 10,
+            "title": "Pod Memory Usage",
+            "type": "graph",
+            "gridPos": {"x": 12, "y": 22, "w": 12, "h": 7},
+            "targets": [
+              {
+                "expr": "container_memory_usage_bytes{namespace='catvsdog',pod=~'catvsdog-api.*'}",
+                "legendFormat": "{{pod}}",
+                "refId": "A"
+              }
+            ],
+            "yaxes": [
+              {"format": "bytes", "label": "Memory"},
+              {"format": "short"}
+            ]
+          },
+          {
+            "id": 11,
+            "title": "Model Information",
+            "type": "table",
+            "gridPos": {"x": 0, "y": 29, "w": 24, "h": 4},
+            "targets": [
+              {
+                "expr": "catvsdog_model_info",
+                "refId": "A",
+                "format": "table"
+              }
+            ]
+          },
+          {
+            "id": 12,
+            "title": "Pod Restart Count",
+            "type": "stat",
+            "gridPos": {"x": 0, "y": 33, "w": 12, "h": 4},
+            "targets": [
+              {
+                "expr": "kube_pod_container_status_restarts_total{namespace='catvsdog',pod=~'catvsdog-api.*'}",
+                "legendFormat": "{{pod}}",
+                "refId": "A"
+              }
+            ],
+            "options": {
+              "colorMode": "background",
+              "reduceOptions": {
+                "values": false,
+                "calcs": ["lastNotNull"]
+              }
+            }
+          },
+          {
+            "id": 13,
+            "title": "API Uptime",
+            "type": "stat",
+            "gridPos": {"x": 12, "y": 33, "w": 12, "h": 4},
+            "targets": [
+              {
+                "expr": "up{job='catvsdog-api'}",
+                "legendFormat": "{{pod}}",
+                "refId": "A"
+              }
+            ],
+            "options": {
+              "colorMode": "background",
+              "graphMode": "none",
+              "reduceOptions": {
+                "values": false,
+                "calcs": ["lastNotNull"]
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"value": null, "color": "red"},
+                  {"value": 1, "color": "green"}
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "overwrite": true
+    }

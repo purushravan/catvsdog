@@ -59,7 +59,7 @@ def callbacks_and_save_model():
 def load_model(*, file_name: str) -> keras.models.Model:
     """Load a persisted model."""
 
-    file_path = TRAINED_MODEL_DIR / file_name
+    file_path = TRAINED_MODEL_DIR / f"{file_name}.keras"
     trained_model = keras.models.load_model(filepath = file_path)
     return trained_model
 

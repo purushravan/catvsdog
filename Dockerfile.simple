@@ -1,0 +1,55 @@
+# Simple Dockerfile for Cats vs Dogs Image Classification
+# This version installs only the API requirements, not the full training requirements
+
+ARG BUILDPLATFORM=linux/arm64
+FROM --platform=${BUILDPLATFORM} python:3.12-slim
+
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+
+# Copy minimal API requirements
+COPY requirements/api_requirements.txt /app/requirements/
+
+# Install minimal API requirements
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r /app/requirements/api_requirements.txt
+
+# Copy only necessary model files
+COPY catvsdog_model/__init__.py /app/catvsdog_model/__init__.py
+COPY catvsdog_model/VERSION /app/catvsdog_model/VERSION
+COPY catvsdog_model/config/ /app/catvsdog_model/config/
+COPY catvsdog_model/config.yml /app/catvsdog_model/config.yml
+COPY catvsdog_model/processing/ /app/catvsdog_model/processing/
+COPY catvsdog_model/predict.py /app/catvsdog_model/predict.py
+COPY catvsdog_model/model.py /app/catvsdog_model/model.py
+COPY catvsdog_model/trained_models/ /app/catvsdog_model/trained_models/
+
+# Copy API application
+COPY catvsdog_model_api/ /app/catvsdog_model_api/
+
+# Create directory for static files
+RUN mkdir -p /app/catvsdog_model_api/app/static
+
+# Expose port
+EXPOSE 8001
+
+# Change to API directory
+WORKDIR /app/catvsdog_model_api
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8001/health || exit 1
+
+# Run the FastAPI application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

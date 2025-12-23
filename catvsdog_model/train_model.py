@@ -20,8 +20,7 @@ def run_training() -> None:
     val_data = load_validation_dataset()
     test_data = load_test_dataset()
     
-    #### MLFlow RELATED CODE BELOW
-    
+    #### MLFlow RELATED CODE BELOW    
     import mlflow
     mlflow.set_tracking_uri("http://127.0.0.1:5000/")
     mlflow.set_experiment("Cat-vs-Dog Classification")

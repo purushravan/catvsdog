@@ -1,0 +1,57 @@
+stages:
+  prepare_data:
+    cmd: python3 scripts/prepare_data.py
+    deps:
+      - scripts/prepare_data.py
+      - catvsdog_model/datasets/data
+    params:
+      - preprocessing
+      - data
+    outs:
+      - data/processed:
+          cache: true
+
+  train_model:
+    cmd: python3 scripts/train_with_dvc.py
+    deps:
+      - scripts/train_with_dvc.py
+      - catvsdog_model/train_model.py
+      - catvsdog_model/model.py
+      - catvsdog_model/processing/features.py
+      - catvsdog_model/processing/data_manager.py
+      - data/processed
+    params:
+      - train
+      - model
+      - augmentation
+      - callbacks
+      - mlflow
+    outs:
+      - catvsdog_model/trained_models/catvsdog__model_output_v${versioning.version}.keras:
+          cache: true
+    metrics:
+      - metrics/training_metrics.json:
+          cache: false
+    plots:
+      - metrics/training_history.csv:
+          cache: false
+          x: epoch
+          y: loss
+
+  evaluate_model:
+    cmd: python3 scripts/evaluate_model.py
+    deps:
+      - scripts/evaluate_model.py
+      - catvsdog_model/trained_models/catvsdog__model_output_v${versioning.version}.keras
+      - data/processed
+    params:
+      - preprocessing
+      - versioning
+    metrics:
+      - metrics/evaluation_metrics.json:
+          cache: false
+    plots:
+      - metrics/confusion_matrix.png:
+          cache: false
+      - metrics/classification_report.json:
+          cache: false

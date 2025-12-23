@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Resources will be applied in the order listed
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+  # Optional resources (comment out if not needed)
+  # - hpa.yaml
+  # - ingress.yaml
+
+# Add common labels to all resources
+commonLabels:
+  app.kubernetes.io/name: catvsdog-classifier
+  app.kubernetes.io/managed-by: kustomize
