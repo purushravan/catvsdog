@@ -1,6 +1,8 @@
 # Dockerfile for Cats vs Dogs Image Classification
-ARG BUILDPLATFORM=linux/arm64
-FROM --platform=${BUILDPLATFORM} python:3.12-slim
+# Optimized for Apple Silicon (M1/M2/M3) but supports multi-platform builds
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+FROM --platform=${TARGETPLATFORM:-linux/arm64} python:3.12-slim
 
 WORKDIR /app
 
@@ -17,20 +19,17 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PIP_NO_CACHE_DIR=1
 
 # Copy requirements first for better caching
-COPY requirements/requirements.txt /app/requirements/requirements.txt
+COPY requirements/api-requirements.txt /app/requirements/api-requirements.txt
 
 # Install Python dependencies
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements/requirements.txt
+    pip install --no-cache-dir -r requirements/api-requirements.txt
 
 # Copy model package files
 COPY catvsdog_model/ /app/catvsdog_model/
-COPY setup.py /app/
-COPY MANIFEST.in /app/
-COPY pyproject.toml /app/
 
-# Install the model package
-RUN pip install --no-cache-dir -e .
+# Add model package to PYTHONPATH instead of installing
+ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Copy API application
 COPY catvsdog_model_api/ /app/catvsdog_model_api/

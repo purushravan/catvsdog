@@ -1,0 +1,20 @@
+# Minimal requirements for API deployment only
+# Excludes development tools, DVC, MLflow tracking, etc.
+
+# FastAPI and web server
+fastapi
+uvicorn[standard]
+python-multipart
+
+# TensorFlow for model inference
+tensorflow==2.16.1
+numpy<2.0.0,>=1.23.5
+
+# Image processing
+pillow
+
+# Monitoring
+prometheus-client
+
+# Utilities
+python-dotenv

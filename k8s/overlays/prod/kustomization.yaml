@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: catvsdog-prod
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+
+resources:
+  - ../../base
+
+replicas:
+  - name: catvsdog-api
+    count: 3
+
+images:
+  - name: catvsdog-classifier
+    newName: ghcr.io/purushravan/catvsdog/catvsdog-classifier
+    newTag: latest
+
+configMapGenerator:
+  - name: catvsdog-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=INFO
+      - ENVIRONMENT=production
+
+patches:
+  - target:
+      kind: Deployment
+      name: catvsdog-api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 1Gi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 4Gi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 500m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 2000m

@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: catvsdog-app
+  namespace: argocd
+  # Add finalizer to ensure proper cleanup
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # The project the application belongs to
+  project: default
+
+  # Source repository configuration
+  source:
+    repoURL: https://github.com/purushravan/catvsdog.git
+    targetRevision: HEAD  # Can be branch, tag, or commit SHA
+    path: k8s  # Path to Kubernetes manifests
+
+    # Kustomize configuration (optional if using kustomization.yaml)
+    kustomize:
+      namePrefix: ""
+      nameSuffix: ""
+      images:
+        - catvsdog-classifier:simple  # Will be updated by CI pipeline
+
+  # Destination cluster and namespace
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: catvsdog
+
+  # Sync policy
+  syncPolicy:
+    # Automated sync configuration
+    automated:
+      prune: true  # Delete resources that are no longer in Git
+      selfHeal: true  # Automatically sync when cluster state differs from Git
+      allowEmpty: false
+
+    # Sync options
+    syncOptions:
+      - CreateNamespace=true  # Auto-create namespace if it doesn't exist
+      - PruneLast=true  # Prune resources as last step
+      - ApplyOutOfSyncOnly=true  # Only sync out-of-sync resources
+
+    # Retry configuration
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Health assessment
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas  # Ignore differences in replicas (for HPA)
