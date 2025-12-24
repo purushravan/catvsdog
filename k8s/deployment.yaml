@@ -45,10 +45,6 @@ spec:
             memory: "2Gi"
             cpu: "1000m"
         volumeMounts:
-        # Model files are already in the Docker image, no need to mount PVC
-        - name: models-storage
-          mountPath: /app/catvsdog_model/trained_models
-          readOnly: true
         - name: static-storage
           mountPath: /app/catvsdog_model_api/app/static
         livenessProbe:
