@@ -5,6 +5,8 @@ pipeline {
         // Docker Registry Configuration
         DOCKER_REGISTRY = 'ghcr.io'
         IMAGE_NAME = "catvsdog-classifier"
+        // Use credentials if available, otherwise use 'user' as fallback
+        GITHUB_USERNAME = credentials('github-username') ?: 'user'
         IMAGE_FULL_NAME = "${DOCKER_REGISTRY}/${GITHUB_USERNAME}/${IMAGE_NAME}"
 
         // Kubernetes Configuration
@@ -98,15 +100,24 @@ pipeline {
                         # Upgrade pip
                         pip install --upgrade pip setuptools wheel
 
-                        # Install requirements
-                        if [ -f requirements/requirements.txt ]; then
-                            pip install -r requirements/requirements.txt
+                        # Install requirements with dependency resolution
+                        if [ -f requirements/requirements-fixed.txt ]; then
+                            echo "Using fixed requirements file..."
+                            pip install -r requirements/requirements-fixed.txt
+                        elif [ -f requirements/requirements.txt ]; then
+                            echo "Installing from requirements.txt..."
+                            # Try with --use-deprecated=legacy-resolver if conflicts occur
+                            pip install -r requirements/requirements.txt || \
+                            pip install --use-deprecated=legacy-resolver -r requirements/requirements.txt || \
+                            echo "⚠️  Some packages failed to install, continuing..."
                         else
-                            echo "⚠️  requirements.txt not found"
+                            echo "⚠️  No requirements file found"
                         fi
 
-                        # Install testing dependencies
-                        pip install pytest pytest-cov pytest-html pylint flake8 black
+                        # Install testing dependencies (essential for pipeline)
+                        echo "Installing test dependencies..."
+                        pip install pytest pytest-cov pytest-html pylint flake8 black --no-deps || \
+                        pip install pytest pytest-cov pytest-html flake8 black
 
                         # Display installed packages
                         pip list
